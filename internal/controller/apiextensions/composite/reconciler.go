@@ -493,6 +493,16 @@ func (r *Reconciler) Reconcile(ctx context.Context, req reconcile.Request) (reco
 			return reconcile.Result{Requeue: true}, errors.Wrap(r.client.Status().Update(ctx, xr), errUpdateStatus)
 		}
 
+		// check for foreground deletion annotation
+		if policy, ok := xr.GetAnnotations()[FieldDeletionPropagationPolicy]; ok {
+			propagationPolicy := client.PropagationPolicy(policy)
+			// delete again with specfied propagationpolicy
+			// TODO avoid retriggering this if desired
+			if err := r.client.Delete(ctx, xr, propagationPolicy); err != nil {
+				return reconcile.Result{Requeue: true}, nil
+			}
+		}
+
 		if err := r.composite.RemoveFinalizer(ctx, xr); err != nil {
 			if kerrors.IsConflict(err) {
 				return reconcile.Result{Requeue: true}, nil
