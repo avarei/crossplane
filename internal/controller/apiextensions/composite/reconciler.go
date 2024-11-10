@@ -94,6 +94,11 @@ const (
 	reasonFatalError xpv1.ConditionReason = "FatalError"
 )
 
+// Deletion Progagation Polciy fields. Allows overwriting the deletion behaviour of the Resource during Garbage Collection.
+const (
+	FieldDeletionPropagationPolicy = "apiextensions.crossplane.io/deletionPropagationPolicy"
+)
+
 // ControllerName returns the recommended name for controllers that use this
 // package to reconcile a particular kind of composite resource.
 func ControllerName(name string) string {

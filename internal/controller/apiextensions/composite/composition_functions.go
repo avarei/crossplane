@@ -96,11 +96,6 @@ const (
 	FieldOwnerComposedPrefix = "apiextensions.crossplane.io/composed"
 )
 
-// Deletion Progagation Polciy fields. Allows overwriting the deletion behaviour of the Resource during Garbage Collection.
-const (
-	FieldDeletionPropagationPolicy = "apiextensions.crossplane.io/deletionPropagationPolicy"
-)
-
 // A FunctionComposer supports composing resources using a pipeline of
 // Composition Functions. It ignores the P&T resources array.
 type FunctionComposer struct {
@@ -754,15 +749,6 @@ func (d *DeletingComposedResourceGarbageCollector) GarbageCollectComposedResourc
 		// go straight to deleting it.
 		if c := metav1.GetControllerOf(cd.Resource); c != nil && c.UID != owner.GetUID() {
 			return errors.Errorf(errFmtControllerMismatch, name, c.Kind, c.Name)
-		}
-
-		policy, ok := cd.Resource.GetAnnotations()[FieldDeletionPropagationPolicy]
-		if ok {
-			propagationPolicy := client.PropagationPolicy(policy)
-			if err := d.client.Delete(ctx, cd.Resource, propagationPolicy); resource.IgnoreNotFound(err) != nil {
-				return errors.Wrapf(err, errFmtDeleteCD, name, cd.Resource.GetObjectKind().GroupVersionKind().Kind, cd.Resource.GetName())
-			}
-			return nil
 		}
 
 		if err := d.client.Delete(ctx, cd.Resource); resource.IgnoreNotFound(err) != nil {
